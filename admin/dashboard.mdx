@@ -1,0 +1,149 @@
+---
+title: 'Dashboard'
+description: 'Complete reference for the admin analytics dashboard — KPI cards, data table, global charts, individual user panels, and group comparison mode.'
+keywords: ['dashboard', 'KPI', 'analytics', 'charts', 'radar', 'heatmap', 'group comparison']
+---
+
+The admin dashboard is the primary analytics interface. It combines a high-level summary of all screening activity, a filterable record table, aggregate statistical charts, and an individual-level diagnostic panel.
+
+<Warning>
+  The dashboard requires an active Supabase session. Users without authentication are redirected to `/login`.
+</Warning>
+
+## KPI cards
+
+Four KPI cards appear at the top of the dashboard. Each card reflects the current filter state — changing a filter updates all four cards simultaneously.
+
+| Card | Description |
+|---|---|
+| **Total Registros** | Total number of screening records matching the active filters |
+| **Ratio Niños** | Percentage of records belonging to male children |
+| **Área Crítica** | The dimension (Alimentación, Aseo/Higiene, Vestido, or Funcionamiento) with the lowest average score across all filtered records |
+| **Última Actividad** | Date of the most recently created record in the filtered set |
+
+## Data table
+
+The data table lists every screening record returned by the Supabase query, ordered by creation date descending.
+
+### Columns
+
+| Column | Description |
+|---|---|
+| (checkbox) | Select record for bulk operations |
+| Fecha | Assessment date |
+| Usuario | Child gender shown as a color badge (blue = Niño, pink = Niña) |
+| Edad | Age in years |
+| Año Nacimiento | Birth year |
+| Diagnóstico | Clinical diagnoses |
+| Tipo Test | Test version badge (emerald = Preescolar, purple = Escolar) |
+| F1 | Phase 1 total score |
+| F2 | Phase 2 total score |
+| F3 | Phase 3 total score |
+| F4 | Phase 4 total score |
+| Total | Sum of all phase scores |
+| Acciones | Per-row action icons (download, delete) |
+
+### Row features
+
+- **Source badge** — Records entered through the manual entry modal display a `MANUAL` badge so they can be distinguished from online submissions.
+- **Row selection** — Check individual rows or use the header checkbox to select all visible rows. When one or more rows are selected, an **Eliminar seleccionados** button appears.
+- **Row click** — Clicking anywhere on a row (outside the checkbox and action icons) opens the individual user dashboard panel below the table.
+
+### Deleting records
+
+<Warning>
+  Deletion is permanent and cascades to both the `answers` and `users` tables. A confirmation dialog is shown before any records are removed.
+</Warning>
+
+<Steps>
+  <Step title="Select records">
+    Check the checkbox on each row you want to delete, or use the header checkbox to select all visible rows.
+  </Step>
+  <Step title="Click Eliminar seleccionados">
+    The button appears in the toolbar above the table as soon as at least one row is selected.
+  </Step>
+  <Step title="Confirm deletion">
+    Review the confirmation dialog and confirm. The records are deleted from `answers` and their associated `users` rows are also removed.
+  </Step>
+</Steps>
+
+## Global statistics
+
+Below the data table, the global statistics section displays aggregate charts for all filtered records. Two additional dropdowns — **globalStatsYear** and **globalStatsAge** — filter the charts independently of the main table filters.
+
+### Charts
+
+<AccordionGroup>
+  <Accordion title="Dimension averages bar chart">
+    A bar chart showing the average score per assessment dimension across all filtered records. The four dimensions are:
+
+    - Alimentación
+    - Aseo/Higiene
+    - Vestido
+    - Funcionamiento
+
+    This chart identifies which functional area has the lowest average performance across the cohort — the same value surfaced in the **Área Crítica** KPI card.
+  </Accordion>
+  <Accordion title="Risk distribution pie chart">
+    A pie chart showing the proportion of records in each risk level:
+
+    - Green — within typical range
+    - Yellow — mild concern
+    - Orange — moderate concern
+    - Red — significant concern
+
+    Use this chart to understand the overall clinical severity distribution of the screened population.
+  </Accordion>
+  <Accordion title="Factor distribution stacked bar chart">
+    A stacked bar chart showing, for each assessment factor, what percentage of records fall into each risk level (Green / Yellow / Orange / Red). This allows you to identify which specific factors contribute most to elevated risk across the cohort.
+  </Accordion>
+  <Accordion title="Frequency table">
+    A tabular companion to the stacked bar chart. For each factor, it shows the exact count of records in each risk level. Use this when you need precise numbers rather than percentages.
+  </Accordion>
+</AccordionGroup>
+
+## Individual user dashboard panel
+
+Clicking a row in the data table opens an individual analytics panel for that record. The panel contains three sections.
+
+### Radar chart
+
+A radar chart with four axes — Alimentación, Aseo, Vestido, and Funcionamiento — comparing:
+
+- The selected child's dimension scores.
+- The peer group average (records with the same birth year and same test type).
+
+This allows immediate visual comparison of where a child sits relative to their cohort.
+
+### Factor heatmap bar chart
+
+A horizontal bar chart showing each factor's obtained score as a percentage of its maximum possible score. Bars are colored by risk level (Green / Yellow / Orange / Red), making it easy to identify which specific factors are most impaired.
+
+### Statistical analysis table
+
+A detailed table listing every factor with the following columns:
+
+| Column | Description |
+|---|---|
+| Factor | Factor name |
+| Puntaje obtenido | Raw score obtained |
+| Puntaje máximo | Maximum possible score |
+| Porcentaje | Score as a percentage of the maximum |
+| Nivel de riesgo | Risk level classification |
+
+## Group comparison mode
+
+The **Group Comparison** toggle at the top of the dashboard switches between two views.
+
+<Tabs>
+  <Tab title="Normal view">
+    The default view shows global statistics for all records matching the active filters. All four charts and the KPI cards reflect the full filtered dataset.
+  </Tab>
+  <Tab title="Comparison view">
+    The comparison view splits the screen into **Group A** and **Group B**, each with its own independent set of filter controls. The same charts are rendered for each group side by side, allowing direct cohort comparison — for example, comparing Preescolar vs Escolar records, or comparing two different birth years.
+  </Tab>
+</Tabs>
+
+<Tip>
+  Group comparison mode is particularly useful for research contexts where you need to contrast outcomes between two defined populations without exporting data to an external tool.
+</Tip>

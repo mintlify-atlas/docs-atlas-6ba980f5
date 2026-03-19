@@ -1,0 +1,219 @@
+---
+title: 'Deployment'
+description: 'Step-by-step guide to deploying the Cribado de Desarrollo Infantil platform: setting up Supabase, configuring environment variables, and deploying to Vercel.'
+keywords: ['deployment', 'vercel', 'supabase', 'next.js', 'environment variables', 'self-host']
+---
+
+## Prerequisites
+
+Before you begin, make sure you have the following:
+
+- **Node.js** 18 or later (LTS recommended)
+- **npm** 9 or later
+- A **Supabase** account — [supabase.com](https://supabase.com)
+- A **Vercel** account (recommended for hosting) — [vercel.com](https://vercel.com)
+- Git and access to the repository
+
+---
+
+## Deployment steps
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the project to your local machine.
+
+    ```bash
+    git clone <repository-url>
+    cd <repository-name>
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    The Next.js application lives in the `plataforma/` directory. Navigate there and install dependencies.
+
+    ```bash
+    cd plataforma
+    npm install
+    ```
+  </Step>
+
+  <Step title="Create a Supabase project">
+    1. Log in to [supabase.com](https://supabase.com) and open the dashboard.
+    2. Click **New project**.
+    3. Choose an organisation, enter a project name, set a strong database password, and select a region closest to your users.
+    4. Wait for the project to finish provisioning (about 1–2 minutes).
+
+    <Tip>
+      Save the database password somewhere secure. You will need it if you connect to the database directly with a SQL client.
+    </Tip>
+  </Step>
+
+  <Step title="Enable the uuid-ossp extension">
+    The schema relies on `uuid_generate_v4()` from the `uuid-ossp` PostgreSQL extension.
+
+    In the Supabase dashboard, go to **Database → Extensions**, search for `uuid-ossp`, and enable it.
+
+    Alternatively, the `CREATE EXTENSION` line at the top of the schema file handles this automatically when you run the SQL in the next step.
+
+    <Tip>
+      Enabling the extension via the dashboard before running the schema avoids any permission issues on managed Supabase instances.
+    </Tip>
+  </Step>
+
+  <Step title="Run the database schema">
+    In the Supabase dashboard, go to **SQL Editor** and paste the contents of `supabase/schema.sql`, then click **Run**.
+
+    ```sql supabase/schema.sql
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+    CREATE TABLE users (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      birth_year INT NOT NULL,
+      gender VARCHAR(50) NOT NULL,
+      diagnoses TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
+
+    CREATE TABLE answers (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      test_type VARCHAR(20) NOT NULL,
+      total_score INT,
+      phase_1_score INT,
+      phase_2_score INT,
+      phase_3_score INT,
+      phase_4_score INT,
+      raw_answers JSONB,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
+
+    ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE answers ENABLE ROW LEVEL SECURITY;
+
+    CREATE POLICY "Allow anonymous inserts to users"
+      ON users FOR INSERT TO anon, authenticated WITH CHECK (true);
+    CREATE POLICY "Allow anonymous inserts to answers"
+      ON answers FOR INSERT TO anon, authenticated WITH CHECK (true);
+    ```
+
+    After the schema runs, add the `source` column for tracking record origin:
+
+    ```sql
+    ALTER TABLE answers
+      ADD COLUMN source VARCHAR(10) CHECK (source IN ('web', 'manual'));
+    ```
+
+    <Note>
+      The `source` column is not in the original `schema.sql` file. Run this `ALTER TABLE` statement separately after the main schema to ensure compatibility with admin features.
+    </Note>
+  </Step>
+
+  <Step title="Configure environment variables">
+    Copy your Supabase project credentials from the dashboard under **Project Settings → API**.
+
+    Create a `.env.local` file in the `plataforma/` directory:
+
+    ```bash plataforma/.env.local
+    NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+    ```
+
+    Both values are safe to expose to the browser (they are prefixed with `NEXT_PUBLIC_`). Access is controlled by Row Level Security policies on the database side, not by keeping these keys secret.
+
+    <Warning>
+      Never commit `.env.local` to version control. Add it to `.gitignore` if it isn't already excluded.
+    </Warning>
+  </Step>
+
+  <Step title="Test locally">
+    Start the Next.js development server from the `plataforma/` directory:
+
+    ```bash
+    npm run dev
+    ```
+
+    Open [http://localhost:3000](http://localhost:3000) in your browser. Complete a full screening session and verify that rows appear in your Supabase `users` and `answers` tables.
+
+    To confirm the admin dashboard works, create an admin user in **Supabase → Authentication → Users**, then log in at `/login`.
+  </Step>
+
+  <Step title="Deploy to Vercel">
+    Vercel is the recommended deployment target for Next.js applications.
+
+    <Tabs>
+      <Tab title="Vercel CLI">
+        Install the Vercel CLI and deploy from the `plataforma/` directory:
+
+        ```bash
+        npm i -g vercel
+        vercel
+        ```
+
+        Follow the prompts to link the project to your Vercel account. When asked for the root directory, enter `plataforma`.
+
+        Add environment variables when prompted, or configure them afterward in the Vercel dashboard under **Settings → Environment Variables**.
+      </Tab>
+      <Tab title="Vercel dashboard">
+        1. Push your repository to GitHub, GitLab, or Bitbucket.
+        2. Open the [Vercel dashboard](https://vercel.com/new) and click **Add New → Project**.
+        3. Import your repository.
+        4. Set the **Root Directory** to `plataforma`.
+        5. Under **Environment Variables**, add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+        6. Click **Deploy**.
+      </Tab>
+    </Tabs>
+
+    Once the deployment completes, Vercel assigns a `.vercel.app` URL. You can add a custom domain under **Settings → Domains**.
+  </Step>
+</Steps>
+
+---
+
+## Environment variables reference
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | The URL of your Supabase project. Found in **Project Settings → API → Project URL**. Format: `https://<project-id>.supabase.co`. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | The public anonymous API key for your Supabase project. Found in **Project Settings → API → Project API Keys → anon public**. Safe to expose in the browser. |
+
+<Info>
+  Both variables use the `NEXT_PUBLIC_` prefix, which makes them available in client-side code. This is intentional: the Supabase client is initialised in the browser and communicates directly with Supabase. Database access is secured by Row Level Security, not by hiding the key.
+</Info>
+
+---
+
+## Row Level Security and admin access
+
+The database enforces the following access rules via RLS:
+
+- **Anonymous users** can INSERT into `users` and `answers` but cannot SELECT, UPDATE, or DELETE any rows.
+- **Authenticated admin users** can read all data. This works because Supabase Auth issues a JWT that grants the `authenticated` role, and the admin dashboard session has elevated privileges that bypass the restrictive RLS setup.
+
+To grant an account admin access to the dashboard:
+1. Create the user in **Supabase → Authentication → Users**.
+2. The user logs in at `/login` using their email and password.
+3. On successful login, Supabase returns a session token. The admin page uses this session to query data.
+
+<Warning>
+  Do not create SELECT policies for the `anon` role on `users` or `answers`. Doing so would expose all screening data to anyone with the anon key.
+</Warning>
+
+---
+
+## Deploying to a non-Vercel host
+
+The application is a standard Next.js app and can be deployed to any Node.js environment.
+
+```bash
+# Build the production bundle
+npm run build
+
+# Start the production server
+npm run start
+```
+
+Ensure the environment variables are set in the host environment before running `npm run build`. On most platforms you can set them in the platform dashboard or via a `.env` file that is loaded at startup.
+
+<Note>
+  The app uses the Next.js App Router with client components. There are no custom server-side API routes, so edge runtime and static export modes are not required — a standard Node.js server works without additional configuration.
+</Note>

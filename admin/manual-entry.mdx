@@ -1,0 +1,136 @@
+---
+title: 'Manual entry'
+description: 'How to enter screening scores from paper-based assessments into the platform using the manual entry modal.'
+keywords: ['manual entry', 'paper assessment', 'data entry', 'preescolar', 'escolar', 'factor scores']
+---
+
+Manual entry allows administrators and clinicians to add screening records that were collected on paper rather than through the online assessment flow. Each record is validated against per-factor maximums before being inserted into Supabase.
+
+<Note>
+  Records created through manual entry are tagged with a `MANUAL` source badge in the data table so they can be distinguished from online submissions.
+</Note>
+
+## When to use manual entry
+
+Use manual entry when:
+
+- A child completed the assessment on a printed questionnaire rather than the digital form.
+- An assessment was conducted in a low-connectivity setting and the scores were recorded on paper.
+- You are migrating historical paper records into the platform.
+
+## Step-by-step guide
+
+<Steps>
+  <Step title="Open the manual entry modal">
+    In the admin dashboard header, click the **Entrada manual** button. The modal opens with an empty form.
+  </Step>
+  <Step title="Enter demographic information">
+    Fill in the child's demographic fields:
+
+    - **Edad** — age in years (number)
+    - **Género** — select Niño or Niña
+    - **Año de nacimiento** — four-digit birth year
+    - **Diagnósticos** — any relevant clinical diagnoses (free text)
+    - **Tipo de test** — select Escolar or Preescolar
+    - **Fecha** — date the assessment was administered
+  </Step>
+  <Step title="Select the test type">
+    The factor fields shown in the next section of the form change depending on whether you selected **Preescolar** or **Escolar**. Ensure you have selected the correct type before entering scores.
+  </Step>
+  <Step title="Enter factor scores">
+    For each phase, enter the raw score obtained for every factor. The form displays the maximum allowed value next to each field. Scores cannot exceed their factor maximum — the form will reject the entry if any value is out of range.
+
+    See the factor tables below for all factor names and their maximums.
+  </Step>
+  <Step title="Save the record">
+    Click **Guardar**. The scores are summed into phase totals and the record is inserted into the `answers` table in Supabase. The data table refreshes automatically to show the new entry.
+  </Step>
+</Steps>
+
+## Factor maxima by test type
+
+<Tabs>
+  <Tab title="Preescolar">
+    ### Phase 1 — Alimentación
+
+    | Factor | Maximum score |
+    |---|---|
+    | Sensibilidad oral | 6 |
+    | Destreza manual en alimentación | 18 |
+    | Buenos modales | 24 |
+
+    ### Phase 2 — Aseo/Higiene
+
+    | Factor | Maximum score |
+    |---|---|
+    | Control de esfínteres y manejo de las necesidades en el WC | 24 |
+    | Cepillado de dientes | 18 |
+    | Higiene personal y acicalamiento | 48 |
+
+    ### Phase 3 — Vestido
+
+    | Factor | Maximum score |
+    |---|---|
+    | General | 63 |
+
+    ### Phase 4 — Funcionamiento
+
+    | Factor | Maximum score |
+    |---|---|
+    | Funciones Ejecutivas Básicas | 24 |
+    | Funciones Ejecutivas de Orden Superior | 27 |
+  </Tab>
+  <Tab title="Escolar">
+    ### Phase 1 — Alimentación
+
+    | Factor | Maximum score |
+    |---|---|
+    | Sensibilidad oral | 6 |
+    | Propiocepción | 12 |
+    | Destreza manual en alimentación | 18 |
+    | Buenas maneras durante la hora de la comida | 24 |
+
+    ### Phase 2 — Aseo/Higiene
+
+    | Factor | Maximum score |
+    |---|---|
+    | Comunicación de necesidades de ir al baño | 3 |
+    | Control de esfínteres | 12 |
+    | Higiene personal y acicalamiento | 54 |
+    | Ducha/baño | 18 |
+
+    ### Phase 3 — Vestido
+
+    | Factor | Maximum score |
+    |---|---|
+    | Tareas aisladas del vestido | 39 |
+    | Vestido completo | 12 |
+
+    ### Phase 4 — Funcionamiento
+
+    | Factor | Maximum score |
+    |---|---|
+    | Funciones Ejecutivas Básicas | 30 |
+    | Funciones Ejecutivas de Orden Superior | 24 |
+  </Tab>
+</Tabs>
+
+## Validation rules
+
+The manual entry form enforces the following rules before saving:
+
+- Every factor score must be a non-negative integer.
+- No factor score may exceed its defined maximum (see tables above).
+- Age and birth year must be valid numbers.
+- Test type and gender are required selections.
+
+<Warning>
+  If any factor score exceeds its maximum, the form will display a validation error and the record will not be saved. Check the entered values against the factor tables above.
+</Warning>
+
+## What happens after saving
+
+1. Factor scores within each phase are summed into a phase total (F1, F2, F3, F4).
+2. The record is inserted into the `answers` table with a `source: 'MANUAL'` marker.
+3. The associated child profile is created or linked in the `users` table.
+4. The data table in the dashboard refreshes to include the new record, which will display the `MANUAL` badge in the source column.

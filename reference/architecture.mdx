@@ -1,0 +1,232 @@
+---
+title: 'Architecture'
+description: 'Technical overview of the Cribado de Desarrollo Infantil platform: tech stack, route map, data flow, and key dependencies.'
+keywords: ['architecture', 'next.js', 'supabase', 'react', 'typescript', 'routes', 'data flow']
+---
+
+## Tech stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| Framework | Next.js | 16.1.6 |
+| UI library | React | 19.2.3 |
+| Language | TypeScript | ^5 |
+| Styling | Tailwind CSS | ^4 |
+| Backend / database | Supabase (`@supabase/supabase-js`) | ^2.97.0 |
+| Charts | Recharts | ^3.7.0 |
+| Animations | Framer Motion | ^12.34.3 |
+| Spreadsheet export | xlsx | ^0.18.5 |
+| Icons | Lucide React | ^0.575.0 |
+| Unique IDs | uuid | ^13.0.0 |
+
+---
+
+## Application route map
+
+All routes live under `src/app/` using the Next.js App Router.
+
+<AccordionGroup>
+  <Accordion title="/ — Home" icon="house">
+    The entry point. Renders a page where the user selects which test type to take: **preescolar** (preschool) or **escolar** (school-age). The selection determines which question set is loaded throughout the rest of the flow.
+  </Accordion>
+
+  <Accordion title="/presentation — Test overview" icon="presentation">
+    Accepts a `?type=preescolar|escolar` query parameter. Displays an informational overview of the developmental screening test before the user begins. Reading this page is required before proceeding to onboarding.
+  </Accordion>
+
+  <Accordion title="/onboarding — Demographics" icon="user">
+    Collects anonymous demographic data: birth year, gender, and any existing diagnoses. On submission, this data is serialised and stored in `sessionStorage` under the key `onboarding_data`. No database write occurs at this stage.
+  </Accordion>
+
+  <Accordion title="/disclaimer — Consent" icon="shield-check">
+    Presents the informed consent notice. The user must explicitly accept before proceeding. On acceptance, the user is redirected to `/test`.
+  </Accordion>
+
+  <Accordion title="/test — Questionnaire" icon="clipboard-list">
+    The core screening instrument. Renders the 4-phase questionnaire loaded from `src/data/questions.json`, filtered by the selected `test_type`. On completion:
+    1. Inserts a record into the `users` table.
+    2. Inserts a record into the `answers` table with per-phase scores and the full `raw_answers` JSONB object.
+    3. Writes `final_score` to `sessionStorage`.
+    4. Clears `onboarding_data` from `sessionStorage`.
+    5. Redirects to `/success`.
+  </Accordion>
+
+  <Accordion title="/success — Results" icon="chart-bar">
+    Displays the screening result to the user. Reads `final_score` from `sessionStorage`. No additional network requests are made on this page.
+  </Accordion>
+
+  <Accordion title="/login — Admin authentication" icon="lock">
+    Handles administrator login via Supabase Auth. On successful authentication, the user is redirected to `/admin`.
+  </Accordion>
+
+  <Accordion title="/admin — Analytics dashboard (protected)" icon="layout-dashboard">
+    Protected route. Only accessible to authenticated users. Queries all `users` and `answers` data via the Supabase service role (bypassing RLS). Displays aggregate analytics using Recharts and supports exporting data to `.xlsx` using the `xlsx` library.
+  </Accordion>
+</AccordionGroup>
+
+### Directory structure
+
+<Tree>
+  <Tree.Folder name="src/app" defaultOpen>
+    <Tree.File name="page.tsx" />
+    <Tree.File name="layout.tsx" />
+    <Tree.File name="globals.css" />
+    <Tree.Folder name="presentation">
+      <Tree.File name="page.tsx" />
+    </Tree.Folder>
+    <Tree.Folder name="onboarding">
+      <Tree.File name="page.tsx" />
+    </Tree.Folder>
+    <Tree.Folder name="disclaimer">
+      <Tree.File name="page.tsx" />
+    </Tree.Folder>
+    <Tree.Folder name="test">
+      <Tree.File name="page.tsx" />
+    </Tree.Folder>
+    <Tree.Folder name="success">
+      <Tree.File name="page.tsx" />
+    </Tree.Folder>
+    <Tree.Folder name="login">
+      <Tree.File name="page.tsx" />
+    </Tree.Folder>
+    <Tree.Folder name="admin">
+      <Tree.File name="page.tsx" />
+    </Tree.Folder>
+  </Tree.Folder>
+  <Tree.Folder name="src/data">
+    <Tree.File name="questions.json" />
+  </Tree.Folder>
+  <Tree.Folder name="src/lib">
+    <Tree.File name="supabase.ts" />
+  </Tree.Folder>
+  <Tree.Folder name="supabase">
+    <Tree.File name="schema.sql" />
+  </Tree.Folder>
+</Tree>
+
+---
+
+## Data flow
+
+The following describes the complete user journey, including what data moves where at each step.
+
+<Steps>
+  <Step title="Test type selection">
+    The user visits `/` and selects either `preescolar` or `escolar`. This selection is passed as a query parameter (`?type=`) through subsequent routes.
+  </Step>
+
+  <Step title="Presentation">
+    `/presentation?type=preescolar|escolar` displays test context. No data is written. The user proceeds when ready.
+  </Step>
+
+  <Step title="Demographic onboarding">
+    `/onboarding` collects `birth_year`, `gender`, and `diagnoses`. On form submission, the data object is written to `sessionStorage['onboarding_data']` as a JSON string. No database write occurs.
+  </Step>
+
+  <Step title="Consent">
+    `/disclaimer` displays the consent notice. On acceptance, the user is redirected to `/test`. No data is written.
+  </Step>
+
+  <Step title="Questionnaire completion">
+    `/test` loads questions from `src/data/questions.json` (filtered by `test_type`). The user completes all 4 phases. On submission:
+    - `onboarding_data` is read from `sessionStorage`.
+    - A record is inserted into `users` (`birth_year`, `gender`, `diagnoses`).
+    - The returned `user_id` is used to insert a record into `answers` (`test_type`, `total_score`, `phase_1_score` through `phase_4_score`, `raw_answers` JSONB).
+    - `final_score` is written to `sessionStorage`.
+    - `onboarding_data` is removed from `sessionStorage`.
+  </Step>
+
+  <Step title="Results display">
+    `/success` reads `final_score` from `sessionStorage` and renders the result. No network requests are made.
+  </Step>
+
+  <Step title="Admin analytics">
+    An authenticated administrator visits `/admin`. The page queries Supabase using the service role key, which bypasses RLS and returns all rows from `users` joined with `answers`. Results are displayed in Recharts visualisations and can be exported as `.xlsx`.
+  </Step>
+</Steps>
+
+```mermaid
+flowchart TD
+    A[/ Home] -->|?type=preescolar|escolar| B[/presentation]
+    B --> C[/onboarding]
+    C -->|writes onboarding_data to sessionStorage| D[/disclaimer]
+    D --> E[/test]
+    E -->|INSERT users| F[(Supabase: users)]
+    E -->|INSERT answers| G[(Supabase: answers)]
+    E -->|writes final_score to sessionStorage| H[/success]
+    H --> I[User reads result]
+    J[/login] -->|Supabase Auth| K[/admin]
+    K -->|SELECT via service role| F
+    K -->|SELECT via service role| G
+```
+
+---
+
+## Session storage
+
+The application uses `sessionStorage` to pass transient data between routes without additional network round-trips. Session storage is scoped to the browser tab and is cleared when the tab is closed.
+
+| Key | Written at | Read at | Cleared at |
+|---|---|---|---|
+| `onboarding_data` | `/onboarding` (on form submit) | `/test` (on questionnaire submit) | `/test` (after successful database inserts) |
+| `final_score` | `/test` (after successful database inserts) | `/success` | Not explicitly cleared (expires with session) |
+
+<Warning>
+  Because results depend on `sessionStorage`, they are not accessible if the user opens `/success` in a new tab, reloads the page after closing the tab, or shares the URL. This is by design: the screening data is anonymous and the URL carries no identifiers.
+</Warning>
+
+---
+
+## Client-side vs server-side responsibilities
+
+| Concern | Where it runs | Notes |
+|---|---|---|
+| Route rendering | Client (CSR) | All screening pages are client components. Session storage access requires the browser. |
+| Questions data | Client | `questions.json` is imported at build time; no API call needed. |
+| Supabase inserts | Client | `users` and `answers` inserts are made from the browser using the anon key. RLS policies restrict access. |
+| Admin queries | Client (authenticated) | Admin page queries Supabase from the browser using an authenticated session that has elevated privileges. |
+| Root layout | Server | `src/app/layout.tsx` sets metadata and applies the Geist font via Next.js font optimisation. |
+| Static assets | Build time | Tailwind CSS is processed at build time via `@tailwindcss/postcss`. |
+
+---
+
+## Key dependencies
+
+<AccordionGroup>
+  <Accordion title="@supabase/supabase-js">
+    Provides the client for all Supabase operations: database reads and writes, and authentication. The app initialises a single client in `src/lib/supabase.ts` using `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. The admin dashboard uses an authenticated session to bypass Row Level Security.
+  </Accordion>
+
+  <Accordion title="recharts">
+    Used in the `/admin` dashboard to render aggregate analytics charts (e.g., score distributions by age group or gender). Recharts is a composable charting library built on D3 and React SVG, chosen for its declarative API and compatibility with React 19.
+  </Accordion>
+
+  <Accordion title="framer-motion">
+    Provides declarative animations for route transitions and UI interactions throughout the screening flow. Framer Motion's `AnimatePresence` and `motion` components are used to animate page entry and exit without managing CSS keyframes manually.
+  </Accordion>
+
+  <Accordion title="xlsx">
+    Enables the admin dashboard to export query results as `.xlsx` spreadsheet files. The library runs entirely in the browser: it serialises JSON data into a workbook and triggers a file download with no server involvement.
+  </Accordion>
+
+  <Accordion title="uuid">
+    Generates RFC 4122 UUIDs on the client side where needed. The database also generates UUIDs server-side via the `uuid-ossp` PostgreSQL extension, so client-side generation is used only where an ID must be known before the insert completes.
+  </Accordion>
+
+  <Accordion title="lucide-react">
+    Provides the icon set used throughout the UI. Icons are tree-shaken at build time so only the icons actually imported are included in the bundle.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related reference pages
+
+<Columns cols={2}>
+  <Card title="Database schema" icon="database" href="/reference/database-schema">
+    Full schema documentation for the `users` and `answers` tables, Row Level Security policies, and the `raw_answers` JSONB structure.
+  </Card>
+  <Card title="Deployment" icon="rocket" href="/reference/deployment">
+    Step-by-step guide to setting up a Supabase project, configuring environment variables, and deploying to Vercel.
+  </Card>
+</Columns>

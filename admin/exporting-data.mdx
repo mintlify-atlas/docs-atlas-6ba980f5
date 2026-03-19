@@ -1,0 +1,123 @@
+---
+title: 'Exporting data'
+description: 'How to export screening data from the admin dashboard — global Excel exports and detailed per-patient workbooks.'
+keywords: ['export', 'Excel', 'xlsx', 'global export', 'patient export', 'statistical analysis']
+---
+
+The admin dashboard provides two export modes: a **global export** that produces a single flat Excel file for all visible records, and an **individual patient export** that generates a detailed multi-sheet workbook for a single record.
+
+<Tabs>
+  <Tab title="Global export">
+    ## Global export
+
+    The global export converts the currently filtered data table to an Excel file. Three export buttons are available in the dashboard toolbar:
+
+    | Button | Scope |
+    |---|---|
+    | **Global** | All records currently visible in the table (all test types) |
+    | **Preescolar** | Only records with test type Preescolar |
+    | **Escolar** | Only records with test type Escolar |
+
+    <Note>
+      Active filters affect the global export. Apply the desired filters before clicking an export button to ensure the file contains only the intended records.
+    </Note>
+
+    ### Exported columns
+
+    Each row in the exported file corresponds to one screening record. The file contains the following columns:
+
+    | Column | Description |
+    |---|---|
+    | `ID_Respuesta` | Unique identifier for the screening record |
+    | `Fecha` | Assessment date |
+    | `Edad` | Child's age in years |
+    | `Año_Nacimiento` | Birth year |
+    | `Genero` | Gender (Niño / Niña) |
+    | `Diagnosticos` | Clinical diagnoses |
+    | `Tipo_Test` | Test type (Preescolar / Escolar) |
+    | `Puntaje_Total` | Total score across all phases |
+    | `Fase_1` | Phase 1 subtotal |
+    | `Fase_2` | Phase 2 subtotal |
+    | `Fase_3` | Phase 3 subtotal |
+    | `Fase_4` | Phase 4 subtotal |
+
+    ### How to export
+
+    <Steps>
+      <Step title="Apply filters">
+        Use the filter controls to narrow the data table to the records you want to export. See [Filters](/admin/filters) for details.
+      </Step>
+      <Step title="Click an export button">
+        Click **Global**, **Preescolar**, or **Escolar** depending on which subset you need.
+      </Step>
+      <Step title="Save the file">
+        Your browser downloads an `.xlsx` file. Open it in Excel, LibreOffice Calc, or any compatible spreadsheet application.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Individual patient export">
+    ## Individual patient export
+
+    The individual patient export generates a detailed multi-sheet workbook for a single screening record. Each sheet corresponds to one assessment phase and presents question-level data in a format that mirrors the printed questionnaire.
+
+    ### How to export
+
+    <Steps>
+      <Step title="Locate the record">
+        Find the record in the data table. Apply filters if needed to narrow the list.
+      </Step>
+      <Step title="Click the download icon">
+        In the **Acciones** column of the row, click the download icon. The workbook is generated immediately and downloaded to your device.
+      </Step>
+    </Steps>
+
+    ### Workbook structure
+
+    The exported workbook contains five sheets.
+
+    #### Phase sheets (one per assessment phase)
+
+    | Sheet name | Assessment phase |
+    |---|---|
+    | Alimentación | Phase 1 |
+    | Higiene Personal | Phase 2 |
+    | Vestido | Phase 3 |
+    | Funcionamiento Diario | Phase 4 |
+
+    Each phase sheet contains:
+
+    - Questions grouped by factor.
+    - An `X` mark in the column corresponding to the selected answer for each question.
+    - A **Phase total** row at the bottom of each sheet.
+
+    #### Statistical analysis sheet
+
+    The fifth sheet, **Análisis Estadístico**, provides a factor-level summary:
+
+    | Column | Description |
+    |---|---|
+    | Factor | Factor name |
+    | Puntaje obtenido | Raw score obtained |
+    | Puntaje máximo | Maximum possible score for this factor |
+    | Porcentaje | Score as a percentage of maximum |
+    | Nivel de riesgo | Risk classification (Green / Yellow / Orange / Red) |
+
+    ### Filename format
+
+    Downloaded files follow this naming convention:
+
+    ```
+    Cuadernillo_{test_type}_Edad{age}_Año{birth_year}_{gender}.xlsx
+    ```
+
+    For example, a Preescolar record for a 5-year-old girl born in 2019 would be named:
+
+    ```
+    Cuadernillo_preescolar_Edad5_Año2019_Niña.xlsx
+    ```
+
+    <Tip>
+      The individual patient export is useful for printing or sharing a child's complete assessment results with a clinician or parent, as it preserves the structure of the original questionnaire.
+    </Tip>
+  </Tab>
+</Tabs>

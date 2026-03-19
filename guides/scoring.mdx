@@ -1,0 +1,150 @@
+---
+title: 'Scoring'
+description: 'How responses are scored, how phase and total scores are calculated, and how to interpret the four-level risk classification.'
+keywords: ['scoring', 'risk classification', 'Likert scale', 'inverted questions', 'results', 'radar chart']
+---
+
+This page explains how individual responses are converted into phase scores, how phase scores combine into a total, and how to interpret the colour-coded risk classification.
+
+---
+
+## The four-point Likert scale
+
+Each question is answered using a four-point scale. The value assigned to each option is used directly in score calculations.
+
+| Option | Value | Meaning |
+|--------|-------|---------|
+| **Siempre** | 3 | Performed habitually and independently |
+| **A veces** | 2 | Inconsistent, with assistance, or frequent errors |
+| **Nunca** | 1 | Not performed or not yet acquired |
+| **No sabe / No oportunidad** | 0 | Not observed or no opportunity has arisen |
+
+Higher values indicate stronger, more independent performance. The sum of all values within a phase produces the phase raw score.
+
+---
+
+## Inverted questions
+
+Some questions describe behaviours where a high frequency is a concern rather than a strength — for example, sensory hypersensitivity or rigid routines. For these items, the scoring is **inverted** before being added to the phase total.
+
+**Inversion mapping:**
+
+| Response | Standard value | Inverted value |
+|----------|---------------|----------------|
+| Siempre | 3 | 1 |
+| A veces | 2 | 2 |
+| Nunca | 1 | 3 |
+| No sabe / No oportunidad | 0 | 0 |
+
+<Info>
+  You do not need to adjust your answers for inverted questions. The platform applies the inversion automatically when calculating scores.
+</Info>
+
+### Categories containing inverted questions
+
+<AccordionGroup>
+  <Accordion title="Alimentación — sensory and oral sensitivity items">
+    - "Es reacio/a a probar alimentos nuevos."
+    - "Es reacio/a a comer alimentos de ciertas texturas (purés, sólidos, crujientes…)."
+    - "Demuestra asco al tener ciertos alimentos en la boca."
+  </Accordion>
+
+  <Accordion title="Higiene Personal — sensory sensitivity items">
+    - "Se muestra estresado/a al cepillarse los dientes."
+    - "Se muestra estresado/a cuando le cortan las uñas o el pelo."
+  </Accordion>
+
+  <Accordion title="Vestido — sensory and body awareness items">
+    - "Le molestan las etiquetas y/o ciertos tejidos."
+    - "No parece darse cuenta de que tiene mal colocadas las prendas de vestir (p.e. la línea del pantalón está retorcida)."
+    - "Quiere llevar siempre las mismas prendas de vestir."
+  </Accordion>
+
+  <Accordion title="Funcionamiento Diario — executive function and emotional regulation items">
+    - "Se frustra fácilmente cuando no es capaz de realizar alguna de sus actividades de la vida diaria."
+    - "Tiene más rabietas de lo esperable para un niño/a de su edad."
+    - Additional items related to rigidity and sustained attention.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Phase scores and total score
+
+Each phase score is the sum of the (possibly inverted) values for all questions in that phase. Phase scores aggregate into a total score.
+
+<Tabs>
+  <Tab title="Preescolar">
+    | Phase | Maximum score |
+    |-------|---------------|
+    | Alimentación | 48 |
+    | Higiene Personal (Aseo) | 90 |
+    | Vestido | 63 |
+    | Funcionamiento Diario | 51 |
+    | **Total** | **252** |
+  </Tab>
+
+  <Tab title="Escolar">
+    | Phase | Maximum score |
+    |-------|---------------|
+    | Alimentación | 60 |
+    | Higiene Personal (Aseo) | 87 |
+    | Vestido | 51 |
+    | Funcionamiento Diario | 54 |
+    | **Total** | **252** |
+  </Tab>
+</Tabs>
+
+The results page displays your **total score as a fraction of the maximum** (e.g., 189/252) alongside a per-phase breakdown showing the raw score for each of the four phases.
+
+---
+
+## Risk classification
+
+Each phase score — and the total score — is converted to a **percentage of its maximum** and assigned to one of four risk levels.
+
+| Level | Colour | Percentage threshold | Label |
+|-------|--------|---------------------|-------|
+| 4 | Green | ≥ 75% | Fortaleza / Desarrollo Óptimo |
+| 3 | Yellow | 50–74% | Desempeño Emergente / En Seguimiento |
+| 2 | Orange | 25–49% | Dificultad Moderada / Precaución |
+| 1 | Red | < 25% | Riesgo Significativo |
+
+**Example:** A Preescolar child scores 30 out of 48 on Alimentación. That is 62.5%, which falls in the **Yellow** band (Desempeño Emergente / En Seguimiento).
+
+<Warning>
+  The risk classification is a screening tool, not a diagnostic instrument. Results indicating Riesgo Significativo or Dificultad Moderada should be followed up with a qualified occupational therapist or paediatric specialist.
+</Warning>
+
+---
+
+## Interpreting results
+
+<Columns cols={2}>
+  <Card title="Green — Fortaleza" icon="circle-check" color="#22C55E">
+    The child performs this domain habitually and independently. No immediate follow-up indicated.
+  </Card>
+  <Card title="Yellow — En Seguimiento" icon="circle" color="#EAB308">
+    Skills are emerging but inconsistent. Monitor progress and consider targeted support.
+  </Card>
+  <Card title="Orange — Precaución" icon="triangle-alert" color="#F97316">
+    Moderate difficulty observed. Professional consultation is recommended.
+  </Card>
+  <Card title="Red — Riesgo Significativo" icon="circle-x" color="#EF4444">
+    Skills are largely not acquired or not performed. Referral to a specialist is strongly advised.
+  </Card>
+</Columns>
+
+---
+
+## Radar chart in the admin dashboard
+
+The admin dashboard displays a **radar chart** that visualises the child's performance across all factors within each phase. Each axis of the radar corresponds to one scoring factor (e.g., Sensibilidad oral, Destreza manual en alimentación).
+
+- The chart provides a quick visual profile of relative strengths and areas of concern across all domains.
+- Factors that score proportionally lower appear closer to the centre of the chart.
+- The chart reflects the same percentage-of-maximum calculation used for the risk classification, making it consistent with the colour-coded results.
+
+<Tip>
+  Use the radar chart alongside the colour-coded phase scores to identify specific factors driving a lower phase total — for example, a phase in the Yellow band may contain one factor in the Red band and others in the Green band.
+</Tip>

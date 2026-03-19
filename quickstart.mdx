@@ -1,80 +1,134 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: 'Quickstart'
+description: 'Run your first AVDB developmental screening assessment from start to results in under 10 minutes.'
+keywords: ['quickstart', 'assessment', 'screening', 'AVDB', 'pediatric', 'ADL']
 ---
 
-## Get started in three steps
-
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+This guide walks through a complete screening session on the Cribado de Desarrollo Infantil platform. Follow each step in order — the platform enforces a linear flow from home screen through to results.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  All data collected during the assessment is stored anonymously. No names or personally identifiable information are required at any point. See [Introduction — how data is collected](/introduction#how-data-is-collected).
 </Note>
+
+## Complete a screening session
+
+<Steps>
+  <Step title="Open the platform">
+    Navigate to the platform home screen at `/`. You will see two large selection cards — one for each age track.
+
+    The home screen does not require authentication. Any caregiver, clinician, or educator can start an assessment without an account.
+  </Step>
+
+  <Step title="Select the child's age group">
+    Choose the track that matches the child's current age:
+
+    | Track | Age range | Route |
+    |-------|-----------|-------|
+    | **Preescolar** | 3–6 years | `/presentation?type=preescolar` |
+    | **Escolar** | 7–12 years | `/presentation?type=escolar` |
+
+    Selecting the wrong track will produce scores calibrated to the wrong developmental expectations. If you are unsure, use the child's age in years at the time of assessment.
+  </Step>
+
+  <Step title="Read the test presentation">
+    The presentation screen (`/presentation`) explains the purpose of the assessment and what to expect. Read through it before proceeding.
+
+    The selected track (`preescolar` or `escolar`) is carried as a URL query parameter through the entire session. Do not navigate away or refresh the browser mid-session, as this will reset the query state.
+  </Step>
+
+  <Step title="Fill in the onboarding form">
+    The onboarding screen (`/onboarding`) collects demographic information about the child. All fields are required.
+
+    **Birth year** — enter the child's year of birth (not their full date of birth).
+
+    **Gender** — select from the available options.
+
+    **Neurodevelopmental conditions** — select all that apply from the list below. You may select multiple.
+
+    - Desarrollo típico
+    - Trastorno del espectro del autismo
+    - Trastorno por déficit de atención e hiperactividad
+    - Discapacidad intelectual
+    - Altas capacidades
+    - Otros (free text field)
+    - Prefiero no contestar
+
+    <Info>
+      If a formal diagnosis has not been made yet, select **Desarrollo típico** or **Prefiero no contestar**. This field informs research segmentation, not the scoring algorithm.
+    </Info>
+  </Step>
+
+  <Step title="Accept the informed consent disclaimer">
+    The disclaimer screen (`/disclaimer`) presents the informed consent statement. This screen must be explicitly accepted before the questionnaire begins.
+
+    Review the consent text carefully. It describes how data is used, what is stored, and the anonymous nature of the collection. Proceeding constitutes acceptance.
+
+    <Warning>
+      If the caregiver or guardian does not consent to data collection, do not proceed past this screen. No data is stored until a response is submitted at the end of the assessment.
+    </Warning>
+  </Step>
+
+  <Step title="Complete each assessment phase">
+    The test screen (`/test`) presents the four AVDB phases in sequence. Each phase must be completed before the next one unlocks.
+
+    | Phase | Domain |
+    |-------|--------|
+    | 1 | Alimentación (Feeding) |
+    | 2 | Higiene Personal (Personal Hygiene) |
+    | 3 | Vestido (Dressing) |
+    | 4 | Funcionamiento Diario (Daily Functioning) |
+
+    For each question, select the frequency that best describes the child's typical behavior:
+
+    | Option | Score | Meaning |
+    |--------|-------|---------|
+    | **Siempre** | 3 | Performs independently and habitually |
+    | **A veces** | 2 | Inconsistent; needs help or makes frequent errors |
+    | **Nunca** | 1 | Not performed or skill not yet acquired |
+    | **No sabe / No oportunidad** | 0 | Unknown or no opportunity to observe |
+
+    Answer based on the child's **typical**, day-to-day behavior — not their best or worst performance.
+
+    <Tip>
+      Some questions are **inverted items** — these are sensory sensitivity questions where answering "Siempre" (always) indicates a concern, not a strength. The platform handles score inversion automatically; you do not need to adjust your answers. Simply respond with the frequency that accurately reflects what you observe.
+    </Tip>
+  </Step>
+
+  <Step title="Submit and view results">
+    After completing all four phases, submit the assessment. The platform will:
+
+    1. Calculate per-phase scores as a percentage of the maximum possible score
+    2. Aggregate an overall total score
+    3. Classify each score into a risk band
+    4. Store the result anonymously in Supabase
+    5. Redirect to the results screen (`/success`)
+
+    The results screen displays color-coded risk classifications for each domain and the overall score:
+
+    | Color | Range | Classification |
+    |-------|-------|----------------|
+    | Green | ≥ 75% | Optimal Development |
+    | Yellow | 50–74% | Emerging / Monitoring |
+    | Orange | 25–49% | Moderate Difficulty |
+    | Red | < 25% | Significant Risk |
+
+    Results in the **Orange** or **Red** bands warrant referral to a pediatric occupational therapist or developmental specialist for full evaluation.
+  </Step>
+</Steps>
+
+## Accessing the admin dashboard
+
+Aggregate results and cohort analytics are available at `/admin`. This route requires authentication via `/login`.
+
+The dashboard is intended for clinicians and researchers managing multiple assessments. It is not part of the standard screening workflow.
+
+## Learn more
+
+<Columns cols={2}>
+  <Card title="Introduction" icon="book-open" href="/introduction">
+    Understand the AVDB methodology, scoring model, and clinical purpose of the platform.
+  </Card>
+  <Card title="Assessment phases" icon="list-ordered" href="/introduction#assessment-dimensions">
+    Detailed breakdown of the four functional domains measured by the questionnaire.
+  </Card>
+</Columns>

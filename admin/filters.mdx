@@ -1,0 +1,106 @@
+---
+title: 'Filters'
+description: 'How to use the filter controls in the admin dashboard to narrow the data table, global charts, and group comparison views.'
+keywords: ['filters', 'birth year', 'age', 'gender', 'diagnosis', 'global stats', 'group comparison']
+---
+
+The admin dashboard provides two sets of filter controls: **table filters** that narrow the main data table (and update the KPI cards), and **global stats filters** that independently control the aggregate charts. All filters are applied client-side to the data already fetched from Supabase — there is no additional network request when a filter value changes.
+
+<Info>
+  Filters do not modify the underlying Supabase query. All records are fetched once on page load and filtering happens in the browser. This means filter changes are instant but the initial load reflects the full dataset.
+</Info>
+
+## Table filters
+
+These controls appear above the data table and affect the records shown in the table, the KPI cards, and the global export.
+
+### Birth year (filterYear)
+
+A dropdown that filters records to a specific birth year. Options:
+
+- **Todos** — no year filter applied (default)
+- A specific four-digit year — only records where the child's birth year matches are shown
+
+The available years are derived dynamically from the records in the dataset.
+
+### Age (filterAge)
+
+A dropdown that filters records by the child's age in years. Options:
+
+- **Todos** — no age filter applied (default)
+- A specific age — only records where the child's age matches are shown
+
+Age values in the dropdown are populated from the actual ages present in the dataset.
+
+### Gender (filterGender)
+
+A dropdown with three options:
+
+| Value | Description |
+|---|---|
+| **Todos** | Show records for all genders (default) |
+| **Niño** | Show only male children |
+| **Niña** | Show only female children |
+
+### Diagnosis (filterDiagnosis)
+
+A text search field (combobox) that filters records by diagnosis keyword. Matching is case-insensitive and searches within the full diagnoses text. Entering a partial term will match any record whose diagnosis field contains that substring.
+
+Leave the field empty to show records regardless of diagnosis.
+
+## How table filters interact
+
+All four table filters are applied together using AND logic — a record must satisfy every active filter to appear in the table. For example, setting **Niño** and birth year **2018** shows only male children born in 2018.
+
+The KPI cards (**Total Registros**, **Ratio Niños**, **Área Crítica**, **Última Actividad**) always reflect the current filtered result set.
+
+<Tip>
+  To reset all filters, set each dropdown back to **Todos** and clear the diagnosis field. The table will return to showing all records.
+</Tip>
+
+## Global stats filters
+
+The aggregate charts section (dimension averages, risk distribution, factor distribution, frequency table) has its own independent filter controls:
+
+| Filter | Description |
+|---|---|
+| **globalStatsYear** | Filter charts to records from a specific birth year |
+| **globalStatsAge** | Filter charts to records from children of a specific age |
+
+These filters operate independently of the table filters. You can, for example, filter the table to show Niña records while the charts display statistics for all ages and birth years — or vice versa.
+
+<Note>
+  The global stats filters affect only the four aggregate charts and the frequency table. They do not change the data table, KPI cards, or export output.
+</Note>
+
+## Group comparison mode filters
+
+When **Group Comparison** mode is active, the dashboard splits into two independent panels: **Group A** and **Group B**. Each panel has its own complete set of filter controls (birth year, age, gender, diagnosis) that operate independently.
+
+This allows direct side-by-side comparison of two cohorts — for example:
+
+- Group A: Preescolar, born 2018 — Group B: Escolar, born 2018
+- Group A: Niño — Group B: Niña
+- Group A: children with a specific diagnosis — Group B: children without it
+
+Each group's charts and statistics are computed from its own filtered subset of records.
+
+<AccordionGroup>
+  <Accordion title="Filtering tips for group comparison">
+    - Use **filterGender** in each group to compare outcomes by gender across the same birth year.
+    - Use **filterDiagnosis** with a specific keyword in Group A and leave it empty in Group B to compare a diagnostic subgroup against the general population.
+    - Both groups draw from the same initial dataset fetched on page load, so no additional queries are needed when switching filters.
+  </Accordion>
+  <Accordion title="Client-side filtering explained">
+    All filtering — including table filters, global stats filters, and group comparison filters — is applied in the browser using JavaScript. The Supabase query runs once on page load and fetches all records joined with user demographic data:
+
+    ```typescript
+    const { data: records } = await supabase
+      .from('answers')
+      .select(`*, users(age, birth_year, gender, diagnoses)`)
+      .order('created_at', { ascending: false });
+    ```
+
+    Subsequent filter interactions do not trigger new database queries. This makes filter changes instant but means the dataset reflects the state of the database at the time the page was loaded. Reload the page to fetch the latest records.
+  </Accordion>
+</AccordionGroup>

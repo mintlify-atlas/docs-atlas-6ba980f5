@@ -1,0 +1,74 @@
+---
+title: 'Admin guide overview'
+description: 'Introduction to the Cribado de Desarrollo Infantil admin area — who it is for, how to access it, and what you can do.'
+keywords: ['admin', 'overview', 'authentication', 'pediatric screening', 'dashboard']
+---
+
+The admin area is the operational hub for coordinators and clinicians who manage pediatric developmental screening data. From here you can review screening results, enter records from paper assessments, export data for analysis, and delete erroneous entries.
+
+<Warning>
+  The admin area requires an active Supabase session. If you are not authenticated, you will be redirected to `/login` automatically.
+</Warning>
+
+## Who should use the admin area
+
+The admin area is intended for:
+
+- **Clinical coordinators** who oversee screening campaigns and need aggregate statistics.
+- **Therapists and evaluators** who enter paper-based assessment scores into the system.
+- **Data analysts** who export records for external reporting or research.
+
+General-purpose users who only fill in online assessments do not need access to the admin area.
+
+## How to access
+
+<Steps>
+  <Step title="Log in">
+    Navigate to `/login` and authenticate with your institutional credentials. The platform uses Supabase Auth for session management.
+  </Step>
+  <Step title="Open the admin area">
+    Once authenticated, navigate to `/admin`. The dashboard loads immediately with the most recent screening records.
+  </Step>
+  <Step title="Log out when finished">
+    Use the **Cerrar sesión** button in the header to end your session. Always log out when using a shared device.
+  </Step>
+</Steps>
+
+<Info>
+  Your Supabase session persists across page refreshes. You will not be asked to log in again unless the session expires or you log out explicitly.
+</Info>
+
+## What you can do in the admin area
+
+<Columns cols={2}>
+  <Card title="Dashboard" icon="chart-bar" href="/admin/dashboard">
+    View KPI cards, a full screening records table, global aggregate charts, and individual user analytics panels. Switch to group comparison mode to contrast two cohorts side by side.
+  </Card>
+  <Card title="Manual entry" icon="pencil" href="/admin/manual-entry">
+    Enter scores from paper-based assessments directly into the database. Supports both Preescolar and Escolar test types with per-factor validation.
+  </Card>
+  <Card title="Exporting data" icon="download" href="/admin/exporting-data">
+    Export filtered records to Excel. Choose between a global export of all visible rows or a detailed per-patient workbook with one sheet per assessment phase.
+  </Card>
+  <Card title="Filters" icon="filter" href="/admin/filters">
+    Narrow the data table and aggregate charts by birth year, age, gender, or diagnosis keyword. Filters are applied client-side for instant results.
+  </Card>
+</Columns>
+
+## Capabilities at a glance
+
+| Capability | Description |
+|---|---|
+| KPI cards | Total records, male ratio, critical area, last activity date |
+| Data table | Full screening history with badges, row selection, and actions |
+| Global charts | Dimension averages, risk distribution, factor distribution |
+| Individual panel | Radar chart and factor heatmap for a selected record |
+| Group comparison | Side-by-side cohort analysis with independent filters |
+| Manual entry | Modal form for paper assessment data entry |
+| Global export | Excel file with all filtered records |
+| Patient export | Per-phase Excel workbook with statistical analysis sheet |
+| Deletion | Bulk delete with confirmation, cascades to `users` table |
+
+<Tip>
+  Start with the [Dashboard](/admin/dashboard) page for a complete description of all analytics components, then refer to the other pages in this guide as needed.
+</Tip>

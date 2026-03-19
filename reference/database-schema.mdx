@@ -1,0 +1,201 @@
+---
+title: 'Database schema'
+description: 'Full schema reference for the Cribado de Desarrollo Infantil Supabase database, including table definitions, Row Level Security policies, and the raw_answers JSONB structure.'
+keywords: ['database', 'schema', 'supabase', 'postgresql', 'rls', 'row level security', 'users', 'answers']
+---
+
+The application uses a Supabase (PostgreSQL) database with two tables: `users` and `answers`. Both tables have Row Level Security enabled.
+
+---
+
+## SQL schema
+
+```sql supabase/schema.sql
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Anonymous users table
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  birth_year INT NOT NULL,
+  gender VARCHAR(50) NOT NULL,
+  diagnoses TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Test answers table
+CREATE TABLE answers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  test_type VARCHAR(20) NOT NULL,
+  total_score INT,
+  phase_1_score INT,
+  phase_2_score INT,
+  phase_3_score INT,
+  phase_4_score INT,
+  raw_answers JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Row Level Security
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE answers ENABLE ROW LEVEL SECURITY;
+
+-- Policies: anyone can insert, no one can select (enforced by RLS)
+CREATE POLICY "Allow anonymous inserts to users"
+  ON users FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Allow anonymous inserts to answers"
+  ON answers FOR INSERT TO anon, authenticated WITH CHECK (true);
+```
+
+<Tip>
+  The `uuid-ossp` extension must be enabled in your Supabase project before running this schema. In the Supabase dashboard, go to **Database → Extensions** and enable `uuid-ossp`, or include the `CREATE EXTENSION` line at the top of your migration.
+</Tip>
+
+---
+
+## `users` table
+
+Stores one anonymous record per completed screening session. No personally identifiable information is collected.
+
+<ResponseField name="id" type="UUID" required>
+  Primary key. Generated automatically by `uuid_generate_v4()` on insert. Used as the foreign key in the `answers` table.
+</ResponseField>
+
+<ResponseField name="birth_year" type="INT" required>
+  The respondent's year of birth. Collected during the `/onboarding` step. Used in admin analytics to calculate approximate age at time of screening.
+</ResponseField>
+
+<ResponseField name="gender" type="VARCHAR(50)" required>
+  The respondent's self-reported gender. Collected during the `/onboarding` step. Maximum 50 characters.
+</ResponseField>
+
+<ResponseField name="diagnoses" type="TEXT">
+  Free-text field for any existing diagnoses or conditions reported by the respondent. Optional — may be `NULL` if the respondent skips this field.
+</ResponseField>
+
+<ResponseField name="created_at" type="TIMESTAMP WITH TIME ZONE">
+  Server-generated timestamp of when the record was inserted. Defaults to `NOW()`. Stored in UTC.
+</ResponseField>
+
+---
+
+## `answers` table
+
+Stores one record per completed test, linked to a `users` row. Contains aggregate phase scores and the full per-question response data.
+
+<ResponseField name="id" type="UUID" required>
+  Primary key. Generated automatically by `uuid_generate_v4()` on insert.
+</ResponseField>
+
+<ResponseField name="user_id" type="UUID">
+  Foreign key referencing `users.id`. Set with `ON DELETE CASCADE`, so deleting a user record also deletes all associated answer records.
+</ResponseField>
+
+<ResponseField name="test_type" type="VARCHAR(20)" required>
+  Identifies which version of the questionnaire was completed. One of:
+  - `preescolar` — preschool screening (younger children)
+  - `escolar` — school-age screening (older children)
+</ResponseField>
+
+<ResponseField name="total_score" type="INT">
+  The aggregate score across all four phases. Computed in the client before insert.
+</ResponseField>
+
+<ResponseField name="phase_1_score" type="INT">
+  Score for phase 1 of the questionnaire.
+</ResponseField>
+
+<ResponseField name="phase_2_score" type="INT">
+  Score for phase 2 of the questionnaire.
+</ResponseField>
+
+<ResponseField name="phase_3_score" type="INT">
+  Score for phase 3 of the questionnaire.
+</ResponseField>
+
+<ResponseField name="phase_4_score" type="INT">
+  Score for phase 4 of the questionnaire.
+</ResponseField>
+
+<ResponseField name="raw_answers" type="JSONB">
+  The complete per-question response data. Keys are question IDs (matching the `id` field in `src/data/questions.json`); values are integer scores from 0 to 3.
+
+  <Expandable title="Structure">
+    <ResponseField name="[question_id]" type="number">
+      Score for a single question, from `0` to `3`. The key is the question's `id` string as defined in `questions.json`. For inverted questions (`invertida: true`), the score is reversed before storage.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="source" type="string">
+  Indicates how the record was created. Not present in the original SQL schema — added to existing deployments with an `ALTER TABLE` statement (see note below). One of:
+  - `web` — submitted through the online screening flow
+  - `manual` — entered manually by an administrator
+
+  This field is optional and may be `NULL` on records created before it was added.
+</ResponseField>
+
+<ResponseField name="created_at" type="TIMESTAMP WITH TIME ZONE">
+  Server-generated timestamp of when the record was inserted. Defaults to `NOW()`. Stored in UTC.
+</ResponseField>
+
+### `raw_answers` example
+
+```json
+{
+  "q_pre_1": 3,
+  "q_pre_2": 1,
+  "q_pre_3": 0,
+  "q_pre_4": 2
+}
+```
+
+Each key corresponds to a question `id` from `src/data/questions.json`. Values range from `0` (never) to `3` (always), or are reversed for inverted/sensory questions where `invertida: true`.
+
+---
+
+## Foreign key relationship
+
+```
+users
+  id ──────────────────────────┐
+                                │ ON DELETE CASCADE
+answers                         │
+  user_id ──── references ──────┘
+```
+
+Deleting a row from `users` automatically deletes all rows in `answers` where `user_id` matches. This ensures referential integrity and simplifies data removal.
+
+---
+
+## Row Level Security
+
+Both tables have RLS enabled. The policies are intentionally asymmetric:
+
+| Role | INSERT | SELECT | UPDATE | DELETE |
+|---|---|---|---|---|
+| `anon` | Allowed | Denied | Denied | Denied |
+| `authenticated` (standard user) | Allowed | Denied | Denied | Denied |
+| `authenticated` (admin session) | Allowed | Allowed (via service role / elevated session) | Allowed | Allowed |
+
+**How admin access works:** The `/admin` dashboard authenticates with Supabase Auth. Authenticated admin sessions use elevated privileges that bypass the RLS SELECT restriction, allowing them to read all rows. Anonymous end-users who submit a screening have INSERT access only — they cannot read any data back, including their own submission.
+
+<Note>
+  There are no explicit SELECT policies for the `anon` or standard `authenticated` roles. In Supabase, the absence of a SELECT policy means SELECT is denied for those roles — this is the intended behaviour.
+</Note>
+
+---
+
+## Adding the `source` column
+
+The `source` column is not present in `supabase/schema.sql` because it was added to existing deployments after the initial release. If you are setting up a new project from the schema file, add the column manually after running the schema:
+
+```sql
+ALTER TABLE answers
+  ADD COLUMN source VARCHAR(10) CHECK (source IN ('web', 'manual'));
+```
+
+<Warning>
+  If you run this on a production database that already contains rows, existing rows will have `source = NULL`. The application handles this gracefully — the `source` field is typed as `source?: 'web' | 'manual'` (optional) in the TypeScript types.
+</Warning>
