@@ -1,0 +1,69 @@
+{
+  "projectType": "saas",
+  "projectName": "Cribado de Desarrollo Infantil",
+  "projectDescription": "A web-based pediatric developmental screening platform (AVDB) that administers standardized assessments of daily living activities for children aged 3–12, storing anonymous results and providing an admin analytics dashboard.",
+  "theme": "almond",
+  "primaryColor": "#e4a572",
+  "lightColor": "#237b5b",
+  "darkColor": "#c8dfe5",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Using the Platform",
+            "pages": [
+              "guides/taking-the-test",
+              "guides/test-types",
+              "guides/scoring"
+            ]
+          },
+          {
+            "group": "Admin Guide",
+            "pages": [
+              "admin/overview",
+              "admin/dashboard",
+              "admin/manual-entry",
+              "admin/exporting-data",
+              "admin/filters"
+            ]
+          },
+          {
+            "group": "Technical Reference",
+            "pages": [
+              "reference/architecture",
+              "reference/database-schema",
+              "reference/deployment"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Two-stage developmental screening: Preescolar (ages 3–6) and Escolar (ages 7–12)",
+    "Four assessment dimensions: Alimentación, Higiene Personal, Vestido, Funcionamiento Diario",
+    "Anonymous data collection with Supabase backend and Row Level Security",
+    "Admin analytics dashboard with radar charts, risk distribution, and group comparison",
+    "Excel export per individual patient or globally across all filtered records",
+    "Manual record entry for paper-based assessments",
+    "Inverted-question logic for sensory sensitivity items",
+    "Risk classification: Green (Optimal), Yellow (Monitoring), Orange (Moderate), Red (Significant Risk)"
+  ],
+  "publicApiSurface": [
+    "GET /presentation?type=preescolar|escolar — Test selection landing",
+    "POST /onboarding — Collect child age, gender, and neurodevelopmental conditions",
+    "GET /disclaimer — Informed consent screen",
+    "POST /test — Administer 4-phase questionnaire and submit answers to Supabase",
+    "GET /success — Show final score breakdown",
+    "GET /admin — Protected analytics dashboard (requires Supabase auth session)",
+    "GET /login — Admin authentication page",
+    "Supabase table: users (id, birth_year, gender, diagnoses)",
+    "Supabase table: answers (id, user_id, test_type, total_score, phase_1-4_score, raw_answers, source)"
+  ]
+}
