@@ -22,7 +22,7 @@ Use manual entry when:
 
 <Steps>
   <Step title="Open the manual entry modal">
-    In the admin dashboard header, click the **Entrada manual** button. The modal opens with an empty form.
+    In the admin dashboard header, click the **Añadir Registro Manual** button. The modal opens with an empty form.
   </Step>
   <Step title="Enter demographic information">
     Fill in the child's demographic fields:
@@ -131,6 +131,6 @@ The manual entry form enforces the following rules before saving:
 ## What happens after saving
 
 1. Factor scores within each phase are summed into a phase total (F1, F2, F3, F4).
-2. The record is inserted into the `answers` table with a `source: 'MANUAL'` marker.
+2.     The record is inserted into the `answers` table with a `source: 'manual'` marker.
 3. The associated child profile is created or linked in the `users` table.
 4. The data table in the dashboard refreshes to include the new record, which will display the `MANUAL` badge in the source column.

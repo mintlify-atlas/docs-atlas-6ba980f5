@@ -96,15 +96,20 @@ Before you begin, make sure you have the following:
       ON answers FOR INSERT TO anon, authenticated WITH CHECK (true);
     ```
 
-    After the schema runs, add the `source` column for tracking record origin:
+    After the schema runs, add two additional columns that the application code requires but are not in the base `schema.sql`:
 
     ```sql
+    -- Add age column to users (stored directly, separate from birth_year)
+    ALTER TABLE users
+      ADD COLUMN age INT;
+
+    -- Add source column to answers (tracks web vs manual entry)
     ALTER TABLE answers
       ADD COLUMN source VARCHAR(10) CHECK (source IN ('web', 'manual'));
     ```
 
     <Note>
-      The `source` column is not in the original `schema.sql` file. Run this `ALTER TABLE` statement separately after the main schema to ensure compatibility with admin features.
+      Neither `age` nor `source` are in the original `schema.sql` file. Run these `ALTER TABLE` statements after the main schema to ensure full compatibility with the application.
     </Note>
   </Step>
 

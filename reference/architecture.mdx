@@ -60,7 +60,7 @@ All routes live under `src/app/` using the Next.js App Router.
   </Accordion>
 
   <Accordion title="/admin — Analytics dashboard (protected)" icon="layout-dashboard">
-    Protected route. Only accessible to authenticated users. Queries all `users` and `answers` data via the Supabase service role (bypassing RLS). Displays aggregate analytics using Recharts and supports exporting data to `.xlsx` using the `xlsx` library.
+    Protected route. Only accessible to users with an active Supabase Auth session. On load, it checks for a valid session via `supabase.auth.getSession()` and redirects unauthenticated visitors to `/login`. Authenticated sessions have elevated privileges that allow SELECT on `users` and `answers` (bypassing the restrictive RLS policies). Displays aggregate analytics using Recharts and supports exporting data to `.xlsx` using the `xlsx` library.
   </Accordion>
 </AccordionGroup>
 
@@ -141,7 +141,7 @@ The following describes the complete user journey, including what data moves whe
   </Step>
 
   <Step title="Admin analytics">
-    An authenticated administrator visits `/admin`. The page queries Supabase using the service role key, which bypasses RLS and returns all rows from `users` joined with `answers`. Results are displayed in Recharts visualisations and can be exported as `.xlsx`.
+    An authenticated administrator visits `/admin`. The page verifies a valid Supabase Auth session, then queries all rows from `users` joined with `answers`. The authenticated session has elevated privileges that satisfy the RLS policies, allowing full read access. Results are displayed in Recharts visualisations and can be exported as `.xlsx`.
   </Step>
 </Steps>
 
@@ -156,8 +156,8 @@ flowchart TD
     E -->|writes final_score to sessionStorage| H[/success]
     H --> I[User reads result]
     J[/login] -->|Supabase Auth| K[/admin]
-    K -->|SELECT via service role| F
-    K -->|SELECT via service role| G
+    K -->|SELECT via authenticated session| F
+    K -->|SELECT via authenticated session| G
 ```
 
 ---
@@ -184,7 +184,7 @@ The application uses `sessionStorage` to pass transient data between routes with
 | Route rendering | Client (CSR) | All screening pages are client components. Session storage access requires the browser. |
 | Questions data | Client | `questions.json` is imported at build time; no API call needed. |
 | Supabase inserts | Client | `users` and `answers` inserts are made from the browser using the anon key. RLS policies restrict access. |
-| Admin queries | Client (authenticated) | Admin page queries Supabase from the browser using an authenticated session that has elevated privileges. |
+| Admin queries | Client (authenticated) | Admin page verifies session via `supabase.auth.getSession()`, then queries Supabase from the browser using an authenticated session with elevated RLS privileges. |
 | Root layout | Server | `src/app/layout.tsx` sets metadata and applies the Geist font via Next.js font optimisation. |
 | Static assets | Build time | Tailwind CSS is processed at build time via `@tailwindcss/postcss`. |
 

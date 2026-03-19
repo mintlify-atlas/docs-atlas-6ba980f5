@@ -58,20 +58,28 @@ CREATE POLICY "Allow anonymous inserts to answers"
 
 Stores one anonymous record per completed screening session. No personally identifiable information is collected.
 
+<Note>
+  The `age` column is not present in `supabase/schema.sql` but is inserted by the application code in `src/app/test/page.tsx`. Add it with `ALTER TABLE users ADD COLUMN age INT;` after running the base schema.
+</Note>
+
 <ResponseField name="id" type="UUID" required>
   Primary key. Generated automatically by `uuid_generate_v4()` on insert. Used as the foreign key in the `answers` table.
 </ResponseField>
 
+<ResponseField name="age" type="INT">
+  The child's age in years at the time of assessment. Collected during the `/onboarding` step and stored directly. Not present in the base schema — must be added with `ALTER TABLE`.
+</ResponseField>
+
 <ResponseField name="birth_year" type="INT" required>
-  The respondent's year of birth. Collected during the `/onboarding` step. Used in admin analytics to calculate approximate age at time of screening.
+  The child's calculated year of birth (current year minus age). Derived from the age entered during onboarding. Used in admin analytics for cohort grouping.
 </ResponseField>
 
 <ResponseField name="gender" type="VARCHAR(50)" required>
-  The respondent's self-reported gender. Collected during the `/onboarding` step. Maximum 50 characters.
+  The respondent's self-reported gender. Collected during the `/onboarding` step. One of `Niño`, `Niña`, or `Otro`. Maximum 50 characters.
 </ResponseField>
 
 <ResponseField name="diagnoses" type="TEXT">
-  Free-text field for any existing diagnoses or conditions reported by the respondent. Optional — may be `NULL` if the respondent skips this field.
+  Comma-separated string of neurodevelopmental conditions selected during onboarding. Optional — may be `NULL` if the respondent skips this field.
 </ResponseField>
 
 <ResponseField name="created_at" type="TIMESTAMP WITH TIME ZONE">
